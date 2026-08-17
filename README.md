@@ -1,2 +1,74 @@
 # Django VPS Deployment Cookiecutter
-A highly optimized CI/CD and Docker setup for deploying Django + Celery + PgBouncer on an AWS EC2 VPS.
+
+A highly optimized, production-ready CI/CD and Docker setup for deploying Django + Celery + PgBouncer + Redis on an AWS EC2 VPS. 
+
+Instead of configuring Docker, Nginx, Let's Encrypt, and GitHub Actions from scratch for every new project, this Starter Kit generates the entire architecture in seconds.
+
+## 🚀 Features
+
+* **Blazing Fast Python Builds:** Uses `uv` (instead of standard `pip`) in the Dockerfile.
+* **Zero-Downtime Deployments:** Docker containers gracefully recreate on GitHub Actions pushes.
+* **Auto-SSL & Reverse Proxy:** Pre-configured Nginx templates with automatic Let's Encrypt SSL provisioning.
+* **Built for Scale:** Includes `PgBouncer` for database connection pooling, and `Redis` + `Celery` for background tasks.
+* **Multi-Tenant Ready:** Dynamically sets host ports so you can run multiple apps on the same VPS without port conflicts.
+* **Safe Bind Mounts:** Maps static and media files to `/var/www/` instead of opaque Docker volumes to prevent Nginx permission issues.
+
+## 📦 Prerequisites
+
+You need `cookiecutter` installed on your machine:
+```bash
+pip install cookiecutter
+```
+
+You also need an AWS EC2 instance (Ubuntu recommended) and a DockerHub account.
+
+## 🛠️ Usage
+
+Navigate to the root of your existing Django project (or where you want to start a new one) and run:
+
+```bash
+cookiecutter https://github.com/Nwafor6/vps-deployment-cookiecutter.git --checkout develop
+```
+
+You will be prompted to provide several variables:
+
+* **`project_slug`**: The name of your project (e.g., `my-awesome-app`). This will be used for network names, container names, and Nginx configs.
+* **`django_project_name`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`).
+* **`dev_domain`**: The domain for your development environment (e.g., `api-dev.example.com`).
+* **`prod_domain`**: The domain for your production environment (e.g., `api.example.com`).
+* **`email_for_ssl`**: The email address Let's Encrypt will use for SSL certificate expiration notices.
+* **`dev_host_port`**: The port exposed to the VPS host for the DEV environment (e.g., `8002`).
+* **`prod_host_port`**: The port exposed to the VPS host for the PROD environment (e.g., `8001`).
+
+### What gets generated?
+```
+your_project/
+├── .github/
+│   └── workflows/
+│       ├── deploy-dev.yml
+│       └── deploy-prod.yml
+├── Dockerfile
+├── docker-compose.<slug>.dev.yml
+├── docker-compose.<slug>.prod.yml
+├── nginx-<slug>-dev.conf
+└── nginx-<slug>-prod.conf
+```
+
+## ⚙️ GitHub Secrets Required
+
+To make the CI/CD pipeline work automatically, add the following Secrets to your GitHub repository:
+
+* **DockerHub**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+* **EC2 Access**: `EC2_HOST`, `EC2_HOST_PROD`, `EC2_USERNAME` (e.g., `ubuntu`), `SSH_PRIVATE_KEY`
+* **App Secrets**: `SECRET_KEY`, `DATABASE_URL` (Dev), `DATABASE_PROD_URL` (Prod)
+* **Optional Integrations**: Any other environment variables your app requires (e.g., AWS S3 keys, AI provider keys). Edit the `.yml` files to pass these through to the `.env` generation step.
+
+## 📖 Deployment Flow
+
+1. Push your code to the `develop` or `main` branches.
+2. GitHub Actions will build the Docker image using `uv` and push it to DockerHub.
+3. The Action SSHs into your EC2 instance.
+4. It dynamically generates a `.env` file on the server.
+5. It pulls the latest image and runs `docker compose up -d` (zero-downtime recreation).
+6. It runs Django migrations and collects static files.
+7. *Optional:* If you set `SETUP_SSL: true` in the GitHub workflow, it will automatically configure Nginx and generate Let's Encrypt certificates.
