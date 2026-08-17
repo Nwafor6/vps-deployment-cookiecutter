@@ -26,9 +26,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:prod,{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:{% raw %}${{ github.sha }}{% endraw %}
-          cache-from: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:buildcache
-          cache-to: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:buildcache,mode=max
+          tags: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:prod,{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:{% raw %}${{ github.sha }}{% endraw %}
+          cache-from: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:buildcache
+          cache-to: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:buildcache,mode=max
 
   update-environment:
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
           username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
           key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
-            rm -rf docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf
+            rm -rf docker-compose.{{cookiecutter.project_slug}}.prod.yml nginx-{{cookiecutter.project_slug}}-prod.conf
             echo "Cleanup done"
 
       - name: Copy deployment files to server
@@ -53,7 +53,7 @@ jobs:
           host: {% raw %}${{ secrets.EC2_HOST_PROD }}{% endraw %}
           username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
           key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
-          source: "docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml,nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf"
+          source: "docker-compose.{{cookiecutter.project_slug}}.prod.yml,nginx-{{cookiecutter.project_slug}}-prod.conf"
           target: "./"
 
       - name: Update Environment Variables on Server
@@ -63,18 +63,18 @@ jobs:
           username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
           key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
-            echo "Creating .env.{{cookiecutter.project_slug}}{% endraw %}.prod file on server"
-            cat <<EOF > .env.{{cookiecutter.project_slug}}{% endraw %}.prod
+            echo "Creating .env.{{cookiecutter.project_slug}}.prod file on server"
+            cat <<EOF > .env.{{cookiecutter.project_slug}}.prod
             # Core Django
-            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}{% endraw %}.settings.production
+            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}.settings.production
             SECRET_KEY={% raw %}${{ secrets.SECRET_KEY }}{% endraw %}
             DB_ENGINE=django.db.backends.postgresql
             DEBUG=False
             APP_ENV=production
-            APP_NAME={{cookiecutter.project_slug}}{% endraw %}
+            APP_NAME={{cookiecutter.project_slug}}
             
             # Docker Image
-            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:prod
+            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:prod
 
             # Redis (product-hosted)
             # REDIS_URL={% raw %}${{ secrets.REDIS_URL }}{% endraw %}
@@ -120,7 +120,7 @@ jobs:
             SENTRY_DSN={% raw %}${{ secrets.SENTRY_DSN }}{% endraw %}
 
             # Additional
-            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.prod_domain}}{% endraw %},{% raw %}${{ secrets.EC2_HOST_PROD }}{% endraw %}
+            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.prod_domain}},{% raw %}${{ secrets.EC2_HOST_PROD }}{% endraw %}
             CORS_ALLOWED_ORIGINS=https://edc.bildup.ai,https://www.edc.bildup.ai
             EOF
             
@@ -141,7 +141,7 @@ jobs:
                 print(f"DATABASE_URL=postgres://{url.username}:{url.password}@pgbouncer:5432/{url.path[1:]}")
             PY_SCRIPT
             
-            python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}{% endraw %}.prod
+            python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}.prod
             rm parse_db_url.py
             
             echo "Environment variables update completed"
@@ -182,40 +182,40 @@ jobs:
 
             # Create host directories for static and media volumes to avoid Docker root permissions issues
             echo "Creating host directories for static and media files..."
-            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}{% endraw %}-prod/static
-            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}{% endraw %}-prod/media
-            sudo chown -R $USER:www-data /var/www/{{cookiecutter.project_slug}}{% endraw %}-prod
-            sudo chmod -R 775 /var/www/{{cookiecutter.project_slug}}{% endraw %}-prod
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-prod/static
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-prod/media
+            sudo chown -R $USER:www-data /var/www/{{cookiecutter.project_slug}}-prod
+            sudo chmod -R 775 /var/www/{{cookiecutter.project_slug}}-prod
 
             # Ensure we can pull the image from Docker Hub
             echo "Logging in to Docker Hub on remote host"
             echo "{% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}" | docker login --username "{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}" --password-stdin || true
 
             # Pull the latest Docker image(s)
-            # docker compose will read .env.{{cookiecutter.project_slug}}{% endraw %}.prod for ${DOCKER_IMAGE} substitution
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml pull || true
+            # docker compose will read .env.{{cookiecutter.project_slug}}.prod for ${DOCKER_IMAGE} substitution
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml pull || true
 
             # Start containers (will gracefully recreate only changed containers)
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml up -d --no-build
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml up -d --no-build
 
             # Wait a moment
             sleep 5
 
             # Run migrations
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml exec -T web python manage.py migrate
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py migrate
 
             # Collect static files
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml exec -T web python manage.py collectstatic --noinput
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py collectstatic --noinput
 
             # Clear cache
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
 
             # Hard delete soft-deleted users
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
 
 
             # Run production tasks
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_prod --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.prod -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.prod.yml exec -T web python manage.py production_task
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py production_task
 
             # Clean up unused images and logs
             sudo docker image prune -f
@@ -239,24 +239,24 @@ jobs:
             sudo chown -R www-data:www-data /var/www/html
 
             # Verify nginx configuration file exists and copy to sites-available
-            if [ -f "$HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf" ]; then
+            if [ -f "$HOME/nginx-{{cookiecutter.project_slug}}-prod.conf" ]; then
               echo "Found nginx configuration file in home, copying to sites-available"
-              sudo cp "$HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf" /etc/nginx/sites-available/{{cookiecutter.project_slug}}{% endraw %}-prod
+              sudo cp "$HOME/nginx-{{cookiecutter.project_slug}}-prod.conf" /etc/nginx/sites-available/{{cookiecutter.project_slug}}-prod
             else
-              echo "Error: $HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf file not found"
-              ls -la $HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-prod.conf* || echo "No nginx files found in home"
+              echo "Error: $HOME/nginx-{{cookiecutter.project_slug}}-prod.conf file not found"
+              ls -la $HOME/nginx-{{cookiecutter.project_slug}}-prod.conf* || echo "No nginx files found in home"
               exit 1
             fi
 
             # Remove only production symlink if it exists to avoid conflicts (keep dev intact)
-            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}{% endraw %}-prod
-            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.prod_domain}}{% endraw %}
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-prod
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.prod_domain}}
             
             # Ensure default nginx site is disabled
             sudo rm -f /etc/nginx/sites-enabled/default
 
             # Enable the production site
-            sudo ln -sf /etc/nginx/sites-available/{{cookiecutter.project_slug}}{% endraw %}-prod /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}{% endraw %}-prod
+            sudo ln -sf /etc/nginx/sites-available/{{cookiecutter.project_slug}}-prod /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-prod
 
             # Test nginx configuration
             echo "Testing nginx configuration..."
@@ -264,13 +264,13 @@ jobs:
 
             # Show configuration details for debugging
             echo "Nginx configuration details:"
-            sudo nginx -T | grep -A 20 -B 5 "{{cookiecutter.project_slug}}{% endraw %}-prod" || echo "No {{cookiecutter.project_slug}}{% endraw %}-prod configuration found in nginx -T output"
+            sudo nginx -T | grep -A 20 -B 5 "{{cookiecutter.project_slug}}-prod" || echo "No {{cookiecutter.project_slug}}-prod configuration found in nginx -T output"
 
             # Reload nginx if configuration is valid
             if sudo nginx -t; then
               sudo systemctl restart nginx
               echo "Nginx configuration updated and reloaded successfully"
-              ls -la /etc/nginx/sites-enabled/ | grep {{cookiecutter.project_slug}}{% endraw %} || echo "Warning: {{cookiecutter.project_slug}}{% endraw %} site not found in sites-enabled"
+              ls -la /etc/nginx/sites-enabled/ | grep {{cookiecutter.project_slug}} || echo "Warning: {{cookiecutter.project_slug}} site not found in sites-enabled"
             else
               echo "Nginx configuration test failed"
               echo "Showing nginx error log:"
@@ -284,7 +284,7 @@ jobs:
 
             # Setup SSL certificates with Certbot
             echo "Setting up SSL certificates..."
-            sudo certbot --nginx -d {{cookiecutter.prod_domain}}{% endraw %} --non-interactive --agree-tos --email {{cookiecutter.email_for_ssl}}{% endraw %} --redirect || echo "SSL setup failed, continuing with HTTP"
+            sudo certbot --nginx -d {{cookiecutter.prod_domain}} --non-interactive --agree-tos --email {{cookiecutter.email_for_ssl}} --redirect || echo "SSL setup failed, continuing with HTTP"
 
             # Setup automatic renewal
             sudo systemctl enable certbot.timer
