@@ -81,44 +81,15 @@ jobs:
             REDIS_URL=redis://redis:6379/0
             CACHE_DRIVER=django_redis.cache.RedisCache
 
-            GOOGLE_GENAI_API_KEY={% raw %}${{ secrets.GOOGLE_GENAI_API_KEY }}{% endraw %}
-
-            # AWS
-            AWS_ACCESS_KEY_ID={% raw %}${{ secrets.AWS_ACCESS_KEY_ID }}{% endraw %}
-            AWS_SECRET_ACCESS_KEY={% raw %}${{ secrets.AWS_SECRET_ACCESS_KEY }}{% endraw %}
-            AWS_DEFAULT_REGION={% raw %}${{ secrets.AWS_DEFAULT_REGION }}{% endraw %}
-            AWS_STORAGE_BUCKET_NAME={% raw %}${{ secrets.AWS_STORAGE_BUCKET_NAME }}{% endraw %}
-            
-            # Google & Audio
-            GOOGLE_CLIENT_ID={% raw %}${{ secrets.GOOGLE_CLIENT_ID }}{% endraw %}
-            
-            # AI Providers
-            OPENAI_API_KEY={% raw %}${{ secrets.OPENAI_API_KEY }}{% endraw %}
-            OPENAI_API_TTS_KEY={% raw %}${{ secrets.OPENAI_API_TTS_KEY }}{% endraw %}
-            DEEP_SEEK_API_KEY={% raw %}${{ secrets.DEEP_SEEK_API_KEY }}{% endraw %}
-            ANTHROPIC_API_KEY={% raw %}${{ secrets.ANTHROPIC_API_KEY }}{% endraw %}
-            GROK_API_KEY={% raw %}${{ secrets.GROK_API_KEY }}{% endraw %}
-            GIT_TOKEN={% raw %}${{ secrets.GIT_TOKEN }}{% endraw %}
-            PREFERRED_AI_PROVIDER=xai
-            
-            ZEPTOMAIL_API_KEY={% raw %}${{ secrets.ZEPTOMAIL_API_KEY }}{% endraw %}
-            DEFAULT_FROM_EMAIL=noreply@bildup.ai
-            ELEVENLABS_API_KEY={% raw %}${{ secrets.ELEVENLABS_API_KEY }}{% endraw %}
-            GROK_STT_API_KEY={% raw %}${{ secrets.GROK_STT_API_KEY }}{% endraw %}
-            FISH_API_KEY={% raw %}${{ secrets.FISH_API_KEY }}{% endraw %}
-            BILDUPAI_API_URL=https://api-dev1.bildup.ai
-
-            # new keys
-            GOOGLE_GENAI_API_KEY={% raw %}${{ secrets.GOOGLE_GENAI_API_KEY }}{% endraw %}
-            AWS_DEFAULT_ACL=public-read
-            AWS_S3_ENDPOINT_URL={% raw %}${{ secrets.AWS_S3_ENDPOINT_URL }}{% endraw %}
-
-            # Sentry
-            SENTRY_DSN={% raw %}${{ secrets.SENTRY_DSN }}{% endraw %}
-
-            # Additional
+            # Network
             ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.dev_domain}}
-            CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,https://edc-advisor.vercel.app
+            CORS_ALLOWED_ORIGINS=https://{{cookiecutter.dev_domain}}
+
+            # ==========================================
+            # ⬇️ ADD YOUR CUSTOM ENVIRONMENT VARIABLES ⬇️
+            # ==========================================
+            # Map your GitHub Secrets to your server's .env file here:
+            # THIRD_PARTY_API_KEY={% raw %}${{ secrets.THIRD_PARTY_API_KEY }}{% endraw %}
             EOF
             
             # Parse DATABASE_URL for PgBouncer and update .env
