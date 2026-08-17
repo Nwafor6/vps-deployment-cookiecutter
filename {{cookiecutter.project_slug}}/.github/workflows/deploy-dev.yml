@@ -1,0 +1,275 @@
+name: Deploy Django to EC2 - Develop
+
+on:
+  push:
+    branches:
+      - BBB-11-remove-celery-from-streaming
+
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:dev,${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:buildcache,mode=max
+
+  update-environment:
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Clean up stale files on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            rm -rf docker-compose.{{cookiecutter.project_slug}}.dev.yml nginx-{{cookiecutter.project_slug}}-dev.conf
+            echo "Cleanup done"
+
+      - name: Copy deployment files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.{{cookiecutter.project_slug}}.dev.yml,nginx-{{cookiecutter.project_slug}}-dev.conf"
+          target: "./"
+
+      - name: Update Environment Variables on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Creating .env.{{cookiecutter.project_slug}}.dev file on server"
+            cat <<EOF > .env.{{cookiecutter.project_slug}}.dev
+            # Core Django
+            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}.settings.development
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DB_ENGINE=django.db.backends.postgresql
+            DEBUG=True
+            APP_ENV=development
+            APP_NAME={{cookiecutter.project_slug}}
+            
+            # Docker Image
+            DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:dev
+
+            # Redis (local docker container)
+            REDIS_URL=redis://redis:6379/0
+            CACHE_DRIVER=django_redis.cache.RedisCache
+
+            GOOGLE_GENAI_API_KEY=${{ secrets.GOOGLE_GENAI_API_KEY }}
+
+            # AWS
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+            AWS_STORAGE_BUCKET_NAME=${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+            
+            # Google & Audio
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            
+            # AI Providers
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            OPENAI_API_TTS_KEY=${{ secrets.OPENAI_API_TTS_KEY }}
+            DEEP_SEEK_API_KEY=${{ secrets.DEEP_SEEK_API_KEY }}
+            ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+            GROK_API_KEY=${{ secrets.GROK_API_KEY }}
+            GIT_TOKEN=${{ secrets.GIT_TOKEN }}
+            PREFERRED_AI_PROVIDER=xai
+            
+            ZEPTOMAIL_API_KEY=${{ secrets.ZEPTOMAIL_API_KEY }}
+            DEFAULT_FROM_EMAIL=noreply@bildup.ai
+            ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
+            GROK_STT_API_KEY=${{ secrets.GROK_STT_API_KEY }}
+            FISH_API_KEY=${{ secrets.FISH_API_KEY }}
+            BILDUPAI_API_URL=https://api-dev1.bildup.ai
+
+            # new keys
+            GOOGLE_GENAI_API_KEY=${{ secrets.GOOGLE_GENAI_API_KEY }}
+            AWS_DEFAULT_ACL=public-read
+            AWS_S3_ENDPOINT_URL=${{ secrets.AWS_S3_ENDPOINT_URL }}
+
+
+            # Sentry
+            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+
+            # Additional
+            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.dev_domain}}
+            CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,https://edc-advisor.vercel.app
+            EOF
+            
+            # Parse DATABASE_URL for PgBouncer and update .env
+            cat <<PY_SCRIPT > parse_db_url.py
+            import os
+            from urllib.parse import urlparse
+            
+            url_str = "${{ secrets.DATABASE_URL }}"
+            if url_str:
+                url = urlparse(url_str)
+                print(f"DB_USER={url.username}")
+                print(f"DB_PASSWORD={url.password}")
+                print(f"DB_HOST={url.hostname}")
+                print(f"DB_PORT={url.port or 5432}")
+                print(f"DB_NAME={url.path[1:]}")
+                # Construct the new DATABASE_URL pointing to pgbouncer service
+                print(f"DATABASE_URL=postgres://{url.username}:{url.password}@pgbouncer:5432/{url.path[1:]}")
+            PY_SCRIPT
+            
+            python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}.dev
+            rm parse_db_url.py
+            
+            echo "Environment variables update completed"
+
+
+  deploy-docker:
+    runs-on: ubuntu-latest
+    needs: [update-environment]
+    env:
+      SETUP_SSL: false # Set to 'true' to enable SSL setup with Certbot and Nginx
+    steps:
+      - name: Deploy and restart Docker containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Stop and disable legacy systemd services to prevent conflicts
+            echo "Stopping legacy systemd services..."
+            sudo systemctl stop daphne celery celerybeat pgbouncer || true
+            sudo systemctl disable daphne celery celerybeat pgbouncer || true
+
+            # Create host directories for static and media volumes to avoid Docker root permissions issues
+            echo "Creating host directories for static and media files..."
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-dev/static
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-dev/media
+            sudo chown -R $USER:www-data /var/www/{{cookiecutter.project_slug}}-dev
+            sudo chmod -R 775 /var/www/{{cookiecutter.project_slug}}-dev
+
+            # Ensure we can pull the image from Docker Hub
+            echo "Logging in to Docker Hub on remote host"
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin || true
+
+            # Pull the latest Docker image(s)
+            # docker compose will read .env.{{cookiecutter.project_slug}}.dev for ${DOCKER_IMAGE} substitution
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml pull || true
+
+            # Start containers (will gracefully recreate only changed containers)
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml up -d --no-build
+
+            # Wait a moment
+            sleep 5
+
+            # Run migrations
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py migrate
+
+            # Collect static files
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py collectstatic --noinput
+
+            # Clear cache
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
+
+            # Hard delete soft-deleted users
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
+
+            # Run production task 
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py production_task
+
+            # Clean up unused images and logs
+            sudo docker image prune -f
+            sudo journalctl --vacuum-time=7d
+            echo "Deployment completed"
+
+      - name: Setup nginx configuration and SSL
+        if: env.SETUP_SSL == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Setting up nginx configuration and SSL..."
+            sudo apt-get update
+            sudo apt-get install -y certbot python3-certbot-nginx curl
+
+            # Create necessary directories for Let's Encrypt
+            sudo mkdir -p /var/www/html/.well-known/acme-challenge
+            sudo chown -R www-data:www-data /var/www/html
+
+            # Verify nginx configuration file exists and copy to sites-available
+            if [ -f "$HOME/nginx-{{cookiecutter.project_slug}}-dev.conf" ]; then
+              echo "Found nginx configuration file in home, copying to sites-available"
+              sudo cp "$HOME/nginx-{{cookiecutter.project_slug}}-dev.conf" /etc/nginx/sites-available/{{cookiecutter.project_slug}}-dev
+            else
+              echo "Error: $HOME/nginx-{{cookiecutter.project_slug}}-dev.conf file not found"
+              ls -la $HOME/nginx-{{cookiecutter.project_slug}}-dev.conf* || echo "No nginx files found in home"
+              exit 1
+            fi
+
+            # Remove only dev symlink if it exists to avoid conflicts (keep prod intact)
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-dev
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.dev_domain}}
+            
+            # Ensure default nginx site is disabled
+            sudo rm -f /etc/nginx/sites-enabled/default
+
+            # Enable the dev site
+            sudo ln -sf /etc/nginx/sites-available/{{cookiecutter.project_slug}}-dev /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-dev
+
+            # Test nginx configuration
+            echo "Testing nginx configuration..."
+            sudo nginx -t
+
+            # Show configuration details for debugging
+            echo "Nginx configuration details:"
+            sudo nginx -T | grep -A 20 -B 5 "{{cookiecutter.project_slug}}-dev" || echo "No {{cookiecutter.project_slug}}-dev configuration found in nginx -T output"
+
+            # Reload nginx if configuration is valid
+            if sudo nginx -t; then
+              sudo systemctl restart nginx
+              echo "Nginx configuration updated and reloaded successfully"
+              ls -la /etc/nginx/sites-enabled/ | grep {{cookiecutter.project_slug}} || echo "Warning: {{cookiecutter.project_slug}} site not found in sites-enabled"
+            else
+              echo "Nginx configuration test failed"
+              echo "Showing nginx error log:"
+              sudo tail -20 /var/log/nginx/error.log || echo "Could not read nginx error log"
+              exit 1
+            fi
+
+            # Wait for the application to be fully deployed before setting up SSL
+            echo "Waiting for application to be ready..."
+            sleep 30
+
+            # Setup SSL certificates with Certbot
+            echo "Setting up SSL certificates..."
+            sudo certbot --nginx -d {{cookiecutter.dev_domain}} --non-interactive --agree-tos --email {{cookiecutter.email_for_ssl}} --redirect || echo "SSL setup failed, continuing with HTTP"
+
+            # Setup automatic renewal
+            sudo systemctl enable certbot.timer
+            sudo systemctl start certbot.timer
+
+            echo "Nginx and SSL setup completed successfully"

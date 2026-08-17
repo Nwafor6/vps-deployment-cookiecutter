@@ -1,0 +1,80 @@
+services:
+  web:
+    image: ${DOCKER_IMAGE}
+    restart: always
+    ports:
+      - "{{cookiecutter.dev_host_port}}:8000"
+    volumes:
+      - /var/www/{{cookiecutter.project_slug}}-dev/static:/app/static
+      - /var/www/{{cookiecutter.project_slug}}-dev/media:/app/media
+    env_file:
+      - .env.{{cookiecutter.project_slug}}.dev
+    depends_on:
+      - pgbouncer
+      - redis
+    networks:
+      - {{cookiecutter.project_slug | replace('-', '_')}}_dev
+
+  celery_worker:
+    image: ${DOCKER_IMAGE}
+    restart: always
+    command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P threads -c 100 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
+    # command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P gevent -c 1000 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
+    volumes:
+      - /var/www/{{cookiecutter.project_slug}}-dev/static:/app/static
+      - /var/www/{{cookiecutter.project_slug}}-dev/media:/app/media
+    env_file:
+      - .env.{{cookiecutter.project_slug}}.dev
+    depends_on:
+      - pgbouncer
+      - redis
+    networks:
+      - {{cookiecutter.project_slug | replace('-', '_')}}_dev
+
+  celery_beat:
+    image: ${DOCKER_IMAGE}
+    restart: always
+    command: celery -A {{cookiecutter.django_project_name}} beat --loglevel=info
+    volumes:
+      - /var/www/{{cookiecutter.project_slug}}-dev/static:/app/static
+      - /var/www/{{cookiecutter.project_slug}}-dev/media:/app/media
+    env_file:
+      - .env.{{cookiecutter.project_slug}}.dev
+    depends_on:
+      - pgbouncer
+      - redis
+    networks:
+      - {{cookiecutter.project_slug | replace('-', '_')}}_dev
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    restart: always
+    env_file:
+      - .env.{{cookiecutter.project_slug}}.dev
+    environment:
+      - DATABASE_URL= # Unset this so it uses DB_HOST/etc
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - POOL_MODE=transaction
+      - AUTH_TYPE=plain
+      - ADMIN_USERS=${DB_USER}
+    networks:
+      - {{cookiecutter.project_slug | replace('-', '_')}}_dev
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - {{cookiecutter.project_slug | replace('-', '_')}}_dev
+
+volumes:
+  redis_data_dev:
+
+networks:
+  {{cookiecutter.project_slug | replace('-', '_')}}_dev:
+    name: {{cookiecutter.project_slug | replace('-', '_')}}_dev
