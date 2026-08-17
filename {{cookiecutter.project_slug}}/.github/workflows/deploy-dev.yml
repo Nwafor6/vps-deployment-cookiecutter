@@ -3,7 +3,7 @@ name: Deploy Django to EC2 - Develop
 on:
   push:
     branches:
-      - BBB-11-remove-celery-from-streaming
+      - main
 
 jobs:
   docker-build-push:
@@ -66,25 +66,7 @@ jobs:
           script: |
             echo "Creating .env.{{cookiecutter.project_slug}}.dev file on server"
             cat <<EOF > .env.{{cookiecutter.project_slug}}.dev
-            # Core Django
-            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}.settings.development
-            SECRET_KEY={% raw %}${{ secrets.SECRET_KEY }}{% endraw %}
-            DB_ENGINE=django.db.backends.postgresql
-            DEBUG=True
-            APP_ENV=development
-            APP_NAME={{cookiecutter.project_slug}}
             
-            # Docker Image
-            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:dev
-
-            # Redis (local docker container)
-            REDIS_URL=redis://redis:6379/0
-            CACHE_DRIVER=django_redis.cache.RedisCache
-
-            # Network
-            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.dev_domain}}
-            CORS_ALLOWED_ORIGINS=https://{{cookiecutter.dev_domain}}
-
             # ==========================================
             # ⬇️ ADD YOUR CUSTOM ENVIRONMENT VARIABLES ⬇️
             # ==========================================
