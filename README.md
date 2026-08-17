@@ -1,6 +1,6 @@
 # Django VPS Deployment Cookiecutter
 
-A highly optimized, production-ready CI/CD and Docker setup for deploying Django + Celery + PgBouncer + Redis on an AWS EC2 VPS. 
+A highly optimized, production-ready CI/CD and Docker setup for deploying Django + Celery + PgBouncer + Redis on ANY VPS (AWS EC2, DigitalOcean Droplet, Hostinger, etc.). 
 
 Instead of configuring Docker, Nginx, Let's Encrypt, and GitHub Actions from scratch for every new project, this Starter Kit generates the entire architecture in seconds.
 
@@ -20,7 +20,7 @@ You need `cookiecutter` installed on your machine:
 pip install cookiecutter
 ```
 
-You also need an AWS EC2 instance (Ubuntu recommended) and a DockerHub account.
+You also need a VPS instance (Ubuntu recommended — e.g., AWS EC2, DigitalOcean, Hostinger) and a DockerHub account.
 
 ## 🛠️ Usage
 
@@ -59,7 +59,7 @@ your_project/
 To make the CI/CD pipeline work automatically, add the following Secrets to your GitHub repository:
 
 * **DockerHub**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
-* **EC2 Access**: `EC2_HOST`, `EC2_HOST_PROD`, `EC2_USERNAME` (e.g., `ubuntu`), `SSH_PRIVATE_KEY`
+* **VPS Access**: `EC2_HOST`, `EC2_HOST_PROD`, `EC2_USERNAME` (e.g., `ubuntu` or `root`), `SSH_PRIVATE_KEY` *(Note: The variable names contain 'EC2', but they work perfectly for any cloud provider)*
 * **App Secrets**: `SECRET_KEY`, `DATABASE_URL` (Dev), `DATABASE_PROD_URL` (Prod)
 * **Optional Integrations**: Any other environment variables your app requires (e.g., AWS S3 keys, AI provider keys). Edit the `.yml` files to pass these through to the `.env` generation step.
 
@@ -67,7 +67,7 @@ To make the CI/CD pipeline work automatically, add the following Secrets to your
 
 1. Push your code to the `develop` or `main` branches.
 2. GitHub Actions will build the Docker image using `uv` and push it to DockerHub.
-3. The Action SSHs into your EC2 instance.
+3. The Action SSHs into your VPS instance.
 4. It dynamically generates a `.env` file on the server.
 5. It pulls the latest image and runs `docker compose up -d` (zero-downtime recreation).
 6. It runs Django migrations and collects static files.
