@@ -19,17 +19,17 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}
+          password: {% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:dev,${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:buildcache,mode=max
+          tags: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:dev,{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:{% raw %}${{ github.sha }}{% endraw %}
+          cache-from: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:buildcache
+          cache-to: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:buildcache,mode=max
 
   update-environment:
     runs-on: ubuntu-latest
@@ -41,84 +41,84 @@ jobs:
       - name: Clean up stale files on server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: {% raw %}${{ secrets.EC2_HOST }}{% endraw %}
+          username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
+          key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
-            rm -rf docker-compose.{{cookiecutter.project_slug}}.dev.yml nginx-{{cookiecutter.project_slug}}-dev.conf
+            rm -rf docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf
             echo "Cleanup done"
 
       - name: Copy deployment files to server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.{{cookiecutter.project_slug}}.dev.yml,nginx-{{cookiecutter.project_slug}}-dev.conf"
+          host: {% raw %}${{ secrets.EC2_HOST }}{% endraw %}
+          username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
+          key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
+          source: "docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml,nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf"
           target: "./"
 
       - name: Update Environment Variables on Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: {% raw %}${{ secrets.EC2_HOST }}{% endraw %}
+          username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
+          key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
-            echo "Creating .env.{{cookiecutter.project_slug}}.dev file on server"
-            cat <<EOF > .env.{{cookiecutter.project_slug}}.dev
+            echo "Creating .env.{{cookiecutter.project_slug}}{% endraw %}.dev file on server"
+            cat <<EOF > .env.{{cookiecutter.project_slug}}{% endraw %}.dev
             # Core Django
-            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}.settings.development
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DJANGO_SETTINGS_MODULE={{cookiecutter.django_project_name}}{% endraw %}.settings.development
+            SECRET_KEY={% raw %}${{ secrets.SECRET_KEY }}{% endraw %}
             DB_ENGINE=django.db.backends.postgresql
             DEBUG=True
             APP_ENV=development
-            APP_NAME={{cookiecutter.project_slug}}
+            APP_NAME={{cookiecutter.project_slug}}{% endraw %}
             
             # Docker Image
-            DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/{{cookiecutter.project_slug}}:dev
+            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}{% endraw %}:dev
 
             # Redis (local docker container)
             REDIS_URL=redis://redis:6379/0
             CACHE_DRIVER=django_redis.cache.RedisCache
 
-            GOOGLE_GENAI_API_KEY=${{ secrets.GOOGLE_GENAI_API_KEY }}
+            GOOGLE_GENAI_API_KEY={% raw %}${{ secrets.GOOGLE_GENAI_API_KEY }}{% endraw %}
 
             # AWS
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
-            AWS_STORAGE_BUCKET_NAME=${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+            AWS_ACCESS_KEY_ID={% raw %}${{ secrets.AWS_ACCESS_KEY_ID }}{% endraw %}
+            AWS_SECRET_ACCESS_KEY={% raw %}${{ secrets.AWS_SECRET_ACCESS_KEY }}{% endraw %}
+            AWS_DEFAULT_REGION={% raw %}${{ secrets.AWS_DEFAULT_REGION }}{% endraw %}
+            AWS_STORAGE_BUCKET_NAME={% raw %}${{ secrets.AWS_STORAGE_BUCKET_NAME }}{% endraw %}
             
             # Google & Audio
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_ID={% raw %}${{ secrets.GOOGLE_CLIENT_ID }}{% endraw %}
             
             # AI Providers
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            OPENAI_API_TTS_KEY=${{ secrets.OPENAI_API_TTS_KEY }}
-            DEEP_SEEK_API_KEY=${{ secrets.DEEP_SEEK_API_KEY }}
-            ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
-            GROK_API_KEY=${{ secrets.GROK_API_KEY }}
-            GIT_TOKEN=${{ secrets.GIT_TOKEN }}
+            OPENAI_API_KEY={% raw %}${{ secrets.OPENAI_API_KEY }}{% endraw %}
+            OPENAI_API_TTS_KEY={% raw %}${{ secrets.OPENAI_API_TTS_KEY }}{% endraw %}
+            DEEP_SEEK_API_KEY={% raw %}${{ secrets.DEEP_SEEK_API_KEY }}{% endraw %}
+            ANTHROPIC_API_KEY={% raw %}${{ secrets.ANTHROPIC_API_KEY }}{% endraw %}
+            GROK_API_KEY={% raw %}${{ secrets.GROK_API_KEY }}{% endraw %}
+            GIT_TOKEN={% raw %}${{ secrets.GIT_TOKEN }}{% endraw %}
             PREFERRED_AI_PROVIDER=xai
             
-            ZEPTOMAIL_API_KEY=${{ secrets.ZEPTOMAIL_API_KEY }}
+            ZEPTOMAIL_API_KEY={% raw %}${{ secrets.ZEPTOMAIL_API_KEY }}{% endraw %}
             DEFAULT_FROM_EMAIL=noreply@bildup.ai
-            ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
-            GROK_STT_API_KEY=${{ secrets.GROK_STT_API_KEY }}
-            FISH_API_KEY=${{ secrets.FISH_API_KEY }}
+            ELEVENLABS_API_KEY={% raw %}${{ secrets.ELEVENLABS_API_KEY }}{% endraw %}
+            GROK_STT_API_KEY={% raw %}${{ secrets.GROK_STT_API_KEY }}{% endraw %}
+            FISH_API_KEY={% raw %}${{ secrets.FISH_API_KEY }}{% endraw %}
             BILDUPAI_API_URL=https://api-dev1.bildup.ai
 
             # new keys
-            GOOGLE_GENAI_API_KEY=${{ secrets.GOOGLE_GENAI_API_KEY }}
+            GOOGLE_GENAI_API_KEY={% raw %}${{ secrets.GOOGLE_GENAI_API_KEY }}{% endraw %}
             AWS_DEFAULT_ACL=public-read
-            AWS_S3_ENDPOINT_URL=${{ secrets.AWS_S3_ENDPOINT_URL }}
+            AWS_S3_ENDPOINT_URL={% raw %}${{ secrets.AWS_S3_ENDPOINT_URL }}{% endraw %}
 
 
             # Sentry
-            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+            SENTRY_DSN={% raw %}${{ secrets.SENTRY_DSN }}{% endraw %}
 
             # Additional
-            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.dev_domain}}
+            ADDITIONAL_ALLOWED_HOSTS={{cookiecutter.dev_domain}}{% endraw %}
             CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000,https://edc-advisor.vercel.app
             EOF
             
@@ -127,7 +127,7 @@ jobs:
             import os
             from urllib.parse import urlparse
             
-            url_str = "${{ secrets.DATABASE_URL }}"
+            url_str = "{% raw %}${{ secrets.DATABASE_URL }}{% endraw %}"
             if url_str:
                 url = urlparse(url_str)
                 print(f"DB_USER={url.username}")
@@ -139,7 +139,7 @@ jobs:
                 print(f"DATABASE_URL=postgres://{url.username}:{url.password}@pgbouncer:5432/{url.path[1:]}")
             PY_SCRIPT
             
-            python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}.dev
+            python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}{% endraw %}.dev
             rm parse_db_url.py
             
             echo "Environment variables update completed"
@@ -154,9 +154,9 @@ jobs:
       - name: Deploy and restart Docker containers
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: {% raw %}${{ secrets.EC2_HOST }}{% endraw %}
+          username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
+          key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
             # Stop and disable legacy systemd services to prevent conflicts
             echo "Stopping legacy systemd services..."
@@ -165,39 +165,39 @@ jobs:
 
             # Create host directories for static and media volumes to avoid Docker root permissions issues
             echo "Creating host directories for static and media files..."
-            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-dev/static
-            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}-dev/media
-            sudo chown -R $USER:www-data /var/www/{{cookiecutter.project_slug}}-dev
-            sudo chmod -R 775 /var/www/{{cookiecutter.project_slug}}-dev
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}{% endraw %}-dev/static
+            sudo mkdir -p /var/www/{{cookiecutter.project_slug}}{% endraw %}-dev/media
+            sudo chown -R $USER:www-data /var/www/{{cookiecutter.project_slug}}{% endraw %}-dev
+            sudo chmod -R 775 /var/www/{{cookiecutter.project_slug}}{% endraw %}-dev
 
             # Ensure we can pull the image from Docker Hub
             echo "Logging in to Docker Hub on remote host"
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin || true
+            echo "{% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}" | docker login --username "{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}" --password-stdin || true
 
             # Pull the latest Docker image(s)
-            # docker compose will read .env.{{cookiecutter.project_slug}}.dev for ${DOCKER_IMAGE} substitution
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml pull || true
+            # docker compose will read .env.{{cookiecutter.project_slug}}{% endraw %}.dev for ${DOCKER_IMAGE} substitution
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml pull || true
 
             # Start containers (will gracefully recreate only changed containers)
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml up -d --no-build
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml up -d --no-build
 
             # Wait a moment
             sleep 5
 
             # Run migrations
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py migrate
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web python manage.py migrate
 
             # Collect static files
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py collectstatic --noinput
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web python manage.py collectstatic --noinput
 
             # Clear cache
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
 
             # Hard delete soft-deleted users
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
 
             # Run production task 
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py production_task
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}{% endraw %}_dev --env-file .env.{{cookiecutter.project_slug}}{% endraw %}.dev -f docker-compose.{{cookiecutter.project_slug}}{% endraw %}.dev.yml exec -T web python manage.py production_task
 
             # Clean up unused images and logs
             sudo docker image prune -f
@@ -208,9 +208,9 @@ jobs:
         if: env.SETUP_SSL == 'true'
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: {% raw %}${{ secrets.EC2_HOST }}{% endraw %}
+          username: {% raw %}${{ secrets.EC2_USERNAME }}{% endraw %}
+          key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
             echo "Setting up nginx configuration and SSL..."
             sudo apt-get update
@@ -221,24 +221,24 @@ jobs:
             sudo chown -R www-data:www-data /var/www/html
 
             # Verify nginx configuration file exists and copy to sites-available
-            if [ -f "$HOME/nginx-{{cookiecutter.project_slug}}-dev.conf" ]; then
+            if [ -f "$HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf" ]; then
               echo "Found nginx configuration file in home, copying to sites-available"
-              sudo cp "$HOME/nginx-{{cookiecutter.project_slug}}-dev.conf" /etc/nginx/sites-available/{{cookiecutter.project_slug}}-dev
+              sudo cp "$HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf" /etc/nginx/sites-available/{{cookiecutter.project_slug}}{% endraw %}-dev
             else
-              echo "Error: $HOME/nginx-{{cookiecutter.project_slug}}-dev.conf file not found"
-              ls -la $HOME/nginx-{{cookiecutter.project_slug}}-dev.conf* || echo "No nginx files found in home"
+              echo "Error: $HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf file not found"
+              ls -la $HOME/nginx-{{cookiecutter.project_slug}}{% endraw %}-dev.conf* || echo "No nginx files found in home"
               exit 1
             fi
 
             # Remove only dev symlink if it exists to avoid conflicts (keep prod intact)
-            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-dev
-            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.dev_domain}}
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}{% endraw %}-dev
+            sudo rm -f /etc/nginx/sites-enabled/{{cookiecutter.dev_domain}}{% endraw %}
             
             # Ensure default nginx site is disabled
             sudo rm -f /etc/nginx/sites-enabled/default
 
             # Enable the dev site
-            sudo ln -sf /etc/nginx/sites-available/{{cookiecutter.project_slug}}-dev /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}-dev
+            sudo ln -sf /etc/nginx/sites-available/{{cookiecutter.project_slug}}{% endraw %}-dev /etc/nginx/sites-enabled/{{cookiecutter.project_slug}}{% endraw %}-dev
 
             # Test nginx configuration
             echo "Testing nginx configuration..."
@@ -246,13 +246,13 @@ jobs:
 
             # Show configuration details for debugging
             echo "Nginx configuration details:"
-            sudo nginx -T | grep -A 20 -B 5 "{{cookiecutter.project_slug}}-dev" || echo "No {{cookiecutter.project_slug}}-dev configuration found in nginx -T output"
+            sudo nginx -T | grep -A 20 -B 5 "{{cookiecutter.project_slug}}{% endraw %}-dev" || echo "No {{cookiecutter.project_slug}}{% endraw %}-dev configuration found in nginx -T output"
 
             # Reload nginx if configuration is valid
             if sudo nginx -t; then
               sudo systemctl restart nginx
               echo "Nginx configuration updated and reloaded successfully"
-              ls -la /etc/nginx/sites-enabled/ | grep {{cookiecutter.project_slug}} || echo "Warning: {{cookiecutter.project_slug}} site not found in sites-enabled"
+              ls -la /etc/nginx/sites-enabled/ | grep {{cookiecutter.project_slug}}{% endraw %} || echo "Warning: {{cookiecutter.project_slug}}{% endraw %} site not found in sites-enabled"
             else
               echo "Nginx configuration test failed"
               echo "Showing nginx error log:"
@@ -266,7 +266,7 @@ jobs:
 
             # Setup SSL certificates with Certbot
             echo "Setting up SSL certificates..."
-            sudo certbot --nginx -d {{cookiecutter.dev_domain}} --non-interactive --agree-tos --email {{cookiecutter.email_for_ssl}} --redirect || echo "SSL setup failed, continuing with HTTP"
+            sudo certbot --nginx -d {{cookiecutter.dev_domain}}{% endraw %} --non-interactive --agree-tos --email {{cookiecutter.email_for_ssl}}{% endraw %} --redirect || echo "SSL setup failed, continuing with HTTP"
 
             # Setup automatic renewal
             sudo systemctl enable certbot.timer
