@@ -146,7 +146,6 @@ jobs:
             
             echo "Environment variables update completed"
 
-
   deploy-docker:
     runs-on: ubuntu-latest
     needs: [update-environment]
@@ -207,15 +206,8 @@ jobs:
             # Collect static files
             sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py collectstatic --noinput
 
-            # Clear cache
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py shell -c "from django.core.cache import cache; cache.clear()"
-
-            # Hard delete soft-deleted users
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web bash scripts/hard_delete_soft_deleted_users.sh
-
-
-            # Run production tasks
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py production_task
+            # Add any custom deployment commands here (e.g. cache clearing, custom scripts)
+            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_prod --env-file .env.{{cookiecutter.project_slug}}.prod -f docker-compose.{{cookiecutter.project_slug}}.prod.yml exec -T web python manage.py your_custom_command
 
             # Clean up unused images and logs
             sudo docker image prune -f
