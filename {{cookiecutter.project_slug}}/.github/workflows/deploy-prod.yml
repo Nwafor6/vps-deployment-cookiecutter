@@ -65,6 +65,7 @@ jobs:
           script: |
             echo "Creating .env.{{cookiecutter.project_slug}}.prod file on server"
             cat <<EOF > .env.{{cookiecutter.project_slug}}.prod
+            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:prod
             # Core Django
 
             # ==========================================
