@@ -42,6 +42,13 @@ jobs:
             email_for_ssl=test@example.com
             
       - name: Validate generated docker-compose files
+        env:
+          DOCKER_IMAGE: dummy_image:latest
+          DB_HOST: dummy_db
+          DB_PORT: 5432
+          DB_USER: dummy_user
+          DB_PASSWORD: dummy_password
+          DB_NAME: dummy_db
         run: |
           cd test_project
           # Install docker compose if not present (usually pre-installed on GH runners)
