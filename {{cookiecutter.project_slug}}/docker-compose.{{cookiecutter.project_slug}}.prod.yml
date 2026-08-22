@@ -96,10 +96,10 @@ services:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
 {% endif %}
 
+{% if cookiecutter.use_redis == 'y' %}
 volumes:
-{%- if cookiecutter.use_redis == 'y' %}
   redis_data_prod:
-{%- endif %}
+{% endif %}
 
 networks:
   {{cookiecutter.project_slug | replace('-', '_')}}_prod:
