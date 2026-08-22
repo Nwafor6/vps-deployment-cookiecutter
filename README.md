@@ -25,10 +25,31 @@ You also need a VPS instance (Ubuntu recommended — e.g., AWS EC2, DigitalOcean
 
 ## 🛠️ Usage
 
-Navigate to the root of your existing Django project (or where you want to start a new one) and run:
+This template can be used to start a new project from scratch or to add a deployment pipeline to an existing one.
+
+### For a New Project
+
+Run the command in the directory where you want your new project folder to be created. It will generate a new folder containing your deployment files, ready for you to start developing.
 
 ```bash
 cookiecutter https://github.com/Nwafor6/vps-deployment-cookiecutter.git --checkout develop
+```
+
+### For an Existing Project
+
+1.  Navigate (`cd`) into your project's root directory (the one with your `pyproject.toml` or `requirements.txt`).
+2.  Run the `cookiecutter` command below. It will create a **new sub-folder** inside your project (e.g., `my-awesome-app/`).
+3.  Move the generated files from this new sub-folder up into your project root.
+
+```bash
+cookiecutter https://github.com/Nwafor6/vps-deployment-cookiecutter.git --checkout develop
+```
+
+After it runs, move the generated files. For a `project_slug` of `my-awesome-app`, you would run:
+
+```bash
+# This moves all files (including hidden ones like .github) into your current directory
+mv my-awesome-app/.[!.]* . && mv my-awesome-app/* . && rmdir my-awesome-app
 ```
 
 You will be prompted to provide several variables:
