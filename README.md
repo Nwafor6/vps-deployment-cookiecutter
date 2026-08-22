@@ -13,7 +13,9 @@ This is a highly optimized, production-ready CI/CD and Docker setup for deployin
 If you want the control and cost-savings of a VPS instead of using a managed PaaS (like Heroku, Render, or Railway), this kit generates the entire production architecture in seconds.
 
 <!-- PLACEHOLDER FOR SCREENSHOT/GIF -->
-> 🖼️ *TODO: Add a GIF here showing `cookiecutter` running and a live site successfully deployed with SSL.*
+<img width="1361" height="617" alt="Screenshot from 2026-08-22 10-07-22" src="https://github.com/user-attachments/assets/eabc4050-1385-4739-b321-d92e2a719430" />
+<img width="1361" height="617" alt="Screenshot from 2026-08-22 10-07-32" src="https://github.com/user-attachments/assets/f03ead72-531e-416b-a07d-13659a80abc8" />
+<img width="1361" height="617" alt="Screenshot from 2026-08-22 10-09-48" src="https://github.com/user-attachments/assets/ff8f075a-ee4d-40e7-b9af-657147eb25de" />
 
 ## 🚀 Features
 
