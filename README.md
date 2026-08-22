@@ -1,8 +1,19 @@
 # Python VPS Deployment Cookiecutter
 
-A highly optimized, production-ready CI/CD and Docker setup for deploying Python apps (Django or FastAPI) + Celery + PgBouncer + Redis on ANY VPS (AWS EC2, DigitalOcean Droplet, Hostinger, etc.). 
 
-Instead of configuring Docker, Nginx, Let's Encrypt, and GitHub Actions from scratch for every new project, this Starter Kit generates the entire architecture in seconds.
+[![CI](https://github.com/Nwafor6/vps-deployment-cookiecutter/actions/workflows/test.yml/badge.svg)](https://github.com/Nwafor6/vps-deployment-cookiecutter/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+*Check out an example project built with this: [YouTube Video Downloader](https://github.com/Nwafor6/youtube-video-downloader)*
+
+I kept rewriting the same Docker, Nginx, Let's Encrypt, and GitHub Actions setup for every VPS project I deployed. So, I templated it.
+
+This is a highly optimized, production-ready CI/CD and Docker setup for deploying Python apps (Django or FastAPI) + Celery + PgBouncer + Redis on **VPS hosting** (AWS EC2, DigitalOcean Droplet, Hetzner, Hostinger, etc.). 
+
+If you want the control and cost-savings of a VPS instead of using a managed PaaS (like Heroku, Render, or Railway), this kit generates the entire production architecture in seconds.
+
+<!-- PLACEHOLDER FOR SCREENSHOT/GIF -->
+> 🖼️ *TODO: Add a GIF here showing `cookiecutter` running and a live site successfully deployed with SSL.*
 
 ## 🚀 Features
 
@@ -13,6 +24,14 @@ Instead of configuring Docker, Nginx, Let's Encrypt, and GitHub Actions from scr
 * **Built for Scale:** Includes `PgBouncer` for database connection pooling, and `Redis` + `Celery` for background tasks.
 * **Multi-Tenant Ready:** Dynamically sets host ports so you can run multiple apps on the same VPS without port conflicts.
 * **Safe Bind Mounts:** Maps static and media files to `/var/www/` instead of opaque Docker volumes to prevent Nginx permission issues.
+
+
+## 🔒 Security Note (Secrets Handling)
+
+This template handles sensitive information (SSH private keys, DockerHub tokens, DB passwords) securely:
+* Secrets are **never** logged or echoed in the CI/CD pipeline.
+* `.env` files are dynamically generated on the server during deployment via a secure SSH session.
+* We recommend creating a dedicated deployment SSH key scoped *only* to the deployment server, rather than using your personal SSH key.
 
 ## 📦 Prerequisites
 

@@ -1,0 +1,49 @@
+name: Test Cookiecutter Template
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        framework: [django, fastapi]
+        package_manager: [uv, poetry, pip]
+        use_redis: [y, n]
+        use_celery: [y, n]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: pip install cookiecutter pyyaml
+        
+      - name: Generate Project
+        run: |
+          cookiecutter . --no-input \
+            project_slug=test_project \
+            framework=${{ matrix.framework }} \
+            package_manager=${{ matrix.package_manager }} \
+            use_redis=${{ matrix.use_redis }} \
+            use_celery=${{ matrix.use_celery }} \
+            use_pgbouncer=y \
+            dev_domain=dev.example.com \
+            prod_domain=example.com \
+            email_for_ssl=test@example.com
+            
+      - name: Validate generated docker-compose files
+        run: |
+          cd test_project
+          # Install docker compose if not present (usually pre-installed on GH runners)
+          docker compose -f docker-compose.test_project.dev.yml config -q
+          docker compose -f docker-compose.test_project.prod.yml config -q
