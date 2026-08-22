@@ -25,8 +25,8 @@ services:
   celery_worker:
     image: ${DOCKER_IMAGE}
     restart: always
-    command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P threads -c 100 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
-    # command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P gevent -c 1000 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
+    command: sh -c "celery -A {{cookiecutter.python_app_folder}} worker -P threads -c 100 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
+    # command: sh -c "celery -A {{cookiecutter.python_app_folder}} worker -P gevent -c 1000 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-development} --loglevel=info"
     volumes:
       - /var/www/{{cookiecutter.project_slug}}-dev/static:/app/static
       - /var/www/{{cookiecutter.project_slug}}-dev/media:/app/media
@@ -47,7 +47,7 @@ services:
   celery_beat:
     image: ${DOCKER_IMAGE}
     restart: always
-    command: celery -A {{cookiecutter.django_project_name}} beat --loglevel=info
+    command: celery -A {{cookiecutter.python_app_folder}} beat --loglevel=info
     volumes:
       - /var/www/{{cookiecutter.project_slug}}-dev/static:/app/static
       - /var/www/{{cookiecutter.project_slug}}-dev/media:/app/media

@@ -47,7 +47,7 @@ COPY . .
 
 # Run uvicorn with multiple workers to use all available CPU cores
 {% if cookiecutter.framework == 'django' %}
-CMD ["uvicorn", "{{cookiecutter.django_project_name}}.asgi:application", \
+CMD ["uvicorn", "{{cookiecutter.python_app_folder}}.asgi:application", \
     "--host", "0.0.0.0", \
     "--port", "8000", \
     "--workers", "4", \

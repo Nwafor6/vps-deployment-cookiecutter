@@ -26,5 +26,5 @@
   "email_for_ssl": "admin@example.com",
   "dev_host_port": "8002",
   "prod_host_port": "8001",
-  "django_project_name": "backend"
+  "python_app_folder": "backend"
 }

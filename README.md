@@ -39,7 +39,7 @@ You will be prompted to provide several variables:
 * **`use_redis`**: Include Redis container? (`y` or `n`)
 * **`use_celery`**: Include Celery worker and beat containers? (`y` or `n`)
 * **`use_pgbouncer`**: Include PgBouncer connection pooler? (`y` or `n`)
-* **`django_project_name`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
+* **`python_app_folder`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
 * **`dev_domain`**: The domain for your development environment (e.g., `api-dev.example.com`).
 * **`prod_domain`**: The domain for your production environment (e.g., `api.example.com`).
 * **`email_for_ssl`**: The email address Let's Encrypt will use for SSL certificate expiration notices.
