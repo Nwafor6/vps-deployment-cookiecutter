@@ -1,12 +1,13 @@
-# Django VPS Deployment Cookiecutter
+# Python VPS Deployment Cookiecutter
 
-A highly optimized, production-ready CI/CD and Docker setup for deploying Django + Celery + PgBouncer + Redis on ANY VPS (AWS EC2, DigitalOcean Droplet, Hostinger, etc.). 
+A highly optimized, production-ready CI/CD and Docker setup for deploying Python apps (Django or FastAPI) + Celery + PgBouncer + Redis on ANY VPS (AWS EC2, DigitalOcean Droplet, Hostinger, etc.). 
 
 Instead of configuring Docker, Nginx, Let's Encrypt, and GitHub Actions from scratch for every new project, this Starter Kit generates the entire architecture in seconds.
 
 ## 🚀 Features
 
-* **Blazing Fast Python Builds:** Uses `uv` (instead of standard `pip`) in the Dockerfile.
+* **Framework Agnostic:** Supports both **Django** and **FastAPI** projects out of the box.
+* **Flexible Package Managers:** Choose between **uv**, **poetry**, or **pip** to match your existing workflow.
 * **Zero-Downtime Deployments:** Docker containers gracefully recreate on GitHub Actions pushes.
 * **Auto-SSL & Reverse Proxy:** Pre-configured Nginx templates with automatic Let's Encrypt SSL provisioning.
 * **Built for Scale:** Includes `PgBouncer` for database connection pooling, and `Redis` + `Celery` for background tasks.
@@ -33,7 +34,12 @@ cookiecutter https://github.com/Nwafor6/vps-deployment-cookiecutter.git --checko
 You will be prompted to provide several variables:
 
 * **`project_slug`**: The name of your project (e.g., `my-awesome-app`). This will be used for network names, container names, and Nginx configs.
-* **`django_project_name`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`).
+* **`framework`**: Choose between `django` or `fastapi`.
+* **`package_manager`**: Choose between `uv`, `poetry`, or `pip`.
+* **`use_redis`**: Include Redis container? (`y` or `n`)
+* **`use_celery`**: Include Celery worker and beat containers? (`y` or `n`)
+* **`use_pgbouncer`**: Include PgBouncer connection pooler? (`y` or `n`)
+* **`django_project_name`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
 * **`dev_domain`**: The domain for your development environment (e.g., `api-dev.example.com`).
 * **`prod_domain`**: The domain for your production environment (e.g., `api.example.com`).
 * **`email_for_ssl`**: The email address Let's Encrypt will use for SSL certificate expiration notices.

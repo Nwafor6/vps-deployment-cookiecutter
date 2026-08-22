@@ -74,6 +74,7 @@ jobs:
             # THIRD_PARTY_API_KEY={% raw %}${{ secrets.THIRD_PARTY_API_KEY }}{% endraw %}
             EOF
             
+            {% if cookiecutter.use_pgbouncer == 'y' %}
             # Parse DATABASE_URL for PgBouncer and update .env
             cat <<PY_SCRIPT > parse_db_url.py
             import os
@@ -93,6 +94,9 @@ jobs:
             
             python3 parse_db_url.py >> .env.{{cookiecutter.project_slug}}.dev
             rm parse_db_url.py
+            {% else %}
+            echo "DATABASE_URL={% raw %}${{ secrets.DATABASE_URL }}{% endraw %}" >> .env.{{cookiecutter.project_slug}}.dev
+            {% endif %}
             
             echo "Environment variables update completed"
 
@@ -135,11 +139,16 @@ jobs:
             # Wait a moment
             sleep 5
 
+            {% if cookiecutter.framework == 'django' %}
             # Run migrations
             sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py migrate
 
             # Collect static files
             sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py collectstatic --noinput
+            {% elif cookiecutter.framework == 'fastapi' %}
+            # Optional: Run alembic migrations if they use it (uncomment if using Alembic)
+            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web alembic upgrade head || true
+            {% endif %}
 
             # Add any custom deployment commands here (e.g. cache clearing, custom scripts)
             # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_dev --env-file .env.{{cookiecutter.project_slug}}.dev -f docker-compose.{{cookiecutter.project_slug}}.dev.yml exec -T web python manage.py your_custom_command

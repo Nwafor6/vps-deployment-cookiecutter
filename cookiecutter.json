@@ -1,5 +1,26 @@
 {
   "project_slug": "my-awesome-app",
+  "framework": [
+    "django",
+    "fastapi"
+  ],
+  "package_manager": [
+    "uv",
+    "poetry",
+    "pip"
+  ],
+  "use_redis": [
+    "y",
+    "n"
+  ],
+  "use_celery": [
+    "y",
+    "n"
+  ],
+  "use_pgbouncer": [
+    "y",
+    "n"
+  ],
   "dev_domain": "api-dev.example.com",
   "prod_domain": "api.example.com",
   "email_for_ssl": "admin@example.com",
