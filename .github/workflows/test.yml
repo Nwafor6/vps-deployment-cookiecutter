@@ -51,6 +51,10 @@ jobs:
           DB_NAME: dummy_db
         run: |
           cd test_project
+          # Create dummy env files to satisfy the env_file directives
+          touch .env.test_project.dev
+          touch .env.test_project.prod
+          
           # Install docker compose if not present (usually pre-installed on GH runners)
           docker compose -f docker-compose.test_project.dev.yml config -q
           docker compose -f docker-compose.test_project.prod.yml config -q
