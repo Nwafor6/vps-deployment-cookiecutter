@@ -20,6 +20,16 @@ RUN apt-get update \
     python3-gdal \
     && rm -rf /var/lib/apt/lists/*
 
+{% if cookiecutter.package_manager == 'pip' %}
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+{% elif cookiecutter.package_manager == 'poetry' %}
+RUN pip install poetry
+COPY pyproject.toml poetry.lock* ./
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+
+{% elif cookiecutter.package_manager == 'uv' %}
 # Install uv (fast Python package installer)
 RUN pip install uv
 
@@ -30,13 +40,22 @@ COPY poetry.lock* ./
 # Install dependencies using uv
 RUN uv pip compile pyproject.toml -o requirements.txt && \
     uv pip install --system -r requirements.txt
+{% endif %}
 
 # Copy project
 COPY . .
 
 # Run uvicorn with multiple workers to use all available CPU cores
-CMD ["uvicorn", "{{cookiecutter.django_project_name}}.asgi:application", \
+{% if cookiecutter.framework == 'django' %}
+CMD ["uvicorn", "{{cookiecutter.python_app_folder}}.asgi:application", \
     "--host", "0.0.0.0", \
     "--port", "8000", \
     "--workers", "4", \
     "--ws-max-size", "10485760"]
+{% elif cookiecutter.framework == 'fastapi' %}
+CMD ["uvicorn", "main:app", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--workers", "4", \
+    "--ws-max-size", "10485760"]
+{% endif %}

@@ -9,43 +9,64 @@ services:
       - /var/www/{{cookiecutter.project_slug}}-prod/media:/app/media
     env_file:
       - .env.{{cookiecutter.project_slug}}.prod
+{%- if cookiecutter.use_pgbouncer == 'y' or cookiecutter.use_redis == 'y' %}
     depends_on:
+{%- if cookiecutter.use_pgbouncer == 'y' %}
       - pgbouncer
+{%- endif %}
+{%- if cookiecutter.use_redis == 'y' %}
       - redis
+{%- endif %}
+{%- endif %}
     networks:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
 
+{% if cookiecutter.use_celery == 'y' %}
   celery_worker:
     image: ${DOCKER_IMAGE}
     restart: always
-    command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P threads -c 100 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-production} --loglevel=info"
-    # command: sh -c "celery -A {{cookiecutter.django_project_name}} worker -P gevent -c 1000 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-production} --loglevel=info"
+    command: sh -c "celery -A {{cookiecutter.python_app_folder}} worker -P threads -c 100 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-production} --loglevel=info"
+    # command: sh -c "celery -A {{cookiecutter.python_app_folder}} worker -P gevent -c 1000 -Q {{cookiecutter.project_slug | replace('-', '_')}}_$${APP_ENV:-production} --loglevel=info"
     volumes:
       - /var/www/{{cookiecutter.project_slug}}-prod/static:/app/static
       - /var/www/{{cookiecutter.project_slug}}-prod/media:/app/media
     env_file:
       - .env.{{cookiecutter.project_slug}}.prod
+{%- if cookiecutter.use_pgbouncer == 'y' or cookiecutter.use_redis == 'y' %}
     depends_on:
+{%- if cookiecutter.use_pgbouncer == 'y' %}
       - pgbouncer
+{%- endif %}
+{%- if cookiecutter.use_redis == 'y' %}
       - redis
+{%- endif %}
+{%- endif %}
     networks:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
 
   celery_beat:
     image: ${DOCKER_IMAGE}
     restart: always
-    command: celery -A {{cookiecutter.django_project_name}} beat --loglevel=info
+    command: celery -A {{cookiecutter.python_app_folder}} beat --loglevel=info
     volumes:
       - /var/www/{{cookiecutter.project_slug}}-prod/static:/app/static
       - /var/www/{{cookiecutter.project_slug}}-prod/media:/app/media
     env_file:
       - .env.{{cookiecutter.project_slug}}.prod
+{%- if cookiecutter.use_pgbouncer == 'y' or cookiecutter.use_redis == 'y' %}
     depends_on:
+{%- if cookiecutter.use_pgbouncer == 'y' %}
       - pgbouncer
+{%- endif %}
+{%- if cookiecutter.use_redis == 'y' %}
       - redis
+{%- endif %}
+{%- endif %}
     networks:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
+{% endif %}
 
+{% if cookiecutter.use_pgbouncer == 'y' %}
   pgbouncer:
     image: edoburu/pgbouncer
     restart: always
@@ -63,7 +84,9 @@ services:
       - ADMIN_USERS=${DB_USER}
     networks:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
+{% endif %}
 
+{% if cookiecutter.use_redis == 'y' %}
   redis:
     image: redis:7-alpine
     restart: always
@@ -71,9 +94,12 @@ services:
       - redis_data_prod:/data
     networks:
       - {{cookiecutter.project_slug | replace('-', '_')}}_prod
+{% endif %}
 
 volumes:
+{%- if cookiecutter.use_redis == 'y' %}
   redis_data_prod:
+{%- endif %}
 
 networks:
   {{cookiecutter.project_slug | replace('-', '_')}}_prod:
