@@ -66,6 +66,7 @@ jobs:
           script: |
             echo "Creating .env.{{cookiecutter.project_slug}}.dev file on server"
             cat <<EOF > .env.{{cookiecutter.project_slug}}.dev
+            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:dev
             
             # ==========================================
             # ⬇️ ADD YOUR CUSTOM ENVIRONMENT VARIABLES ⬇️
