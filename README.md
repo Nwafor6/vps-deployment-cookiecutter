@@ -4,6 +4,7 @@
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) [![Cookiecutter](https://img.shields.io/badge/cookiecutter-template-D4AA00.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 *Check out an example project built with this: [YouTube Video Downloader](https://github.com/Nwafor6/youtube-video-downloader)*
+
 *Looking for the frontend equivalent? Check out the [Frontend VPS Deployment Cookiecutter](https://github.com/Nwafor6/vps-deployment-cookiecutter-js) for Next.js & Vite.*
 
 I kept rewriting the same Docker, Nginx, Let's Encrypt, and GitHub Actions setup for every VPS project I deployed. So, I templated it.
