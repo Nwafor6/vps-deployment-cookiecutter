@@ -54,4 +54,4 @@ jobs:
           touch .env.test_project.development
           
           # Install docker compose if not present (usually pre-installed on GH runners)
-          docker compose -f docker-compose.development.yml config -q
+          docker compose -f docker-compose.test_project.development.yml config -q
