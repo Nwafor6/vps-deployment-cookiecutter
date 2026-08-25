@@ -37,8 +37,9 @@ jobs:
             use_redis=${{ matrix.use_redis }} \
             use_celery=${{ matrix.use_celery }} \
             use_pgbouncer=y \
-            dev_domain=dev.example.com \
-            prod_domain=example.com \
+            environment=development \
+            domain=dev.example.com \
+            host_port=8000 \
             email_for_ssl=test@example.com
             
       - name: Validate generated docker-compose files
@@ -52,9 +53,7 @@ jobs:
         run: |
           cd test_project
           # Create dummy env files to satisfy the env_file directives
-          touch .env.test_project.dev
-          touch .env.test_project.prod
+          touch .env.test_project.development
           
           # Install docker compose if not present (usually pre-installed on GH runners)
-          docker compose -f docker-compose.test_project.dev.yml config -q
-          docker compose -f docker-compose.test_project.prod.yml config -q
+          docker compose -f docker-compose.development.yml config -q

@@ -4,7 +4,7 @@ services:
     restart: always
     labels:
       caddy: {{cookiecutter.domain}}
-      caddy.reverse_proxy: "{{upstreams 80}}"
+      caddy.reverse_proxy: "{% raw %}{{upstreams 80}}{% endraw %}"
     volumes:
       - ./Caddyfile.{{cookiecutter.environment}}:/etc/caddy/Caddyfile
       - /var/www/{{cookiecutter.project_slug}}-{{cookiecutter.environment}}/static:/app/static
