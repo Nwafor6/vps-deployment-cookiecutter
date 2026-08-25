@@ -106,7 +106,6 @@ You will be prompted to provide several variables:
 * **`use_pgbouncer`**: Include PgBouncer connection pooler? (`y` or `n`)
 * **`environment`**: The environment you are targeting (e.g., `development`, `staging`, `production`).
 * **`domain`**: The domain for this specific environment (e.g., `api-dev.example.com` or `api.example.com`).
-* **`email_for_ssl`**: The email address Let's Encrypt will use for SSL certificate expiration notices.
 * **`python_app_folder`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
 
 ### What gets generated?

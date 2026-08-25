@@ -23,6 +23,5 @@
   ],
   "environment": "production",
   "domain": "api.example.com",
-  "email_for_ssl": "admin@example.com",
   "python_app_folder": "backend"
 }

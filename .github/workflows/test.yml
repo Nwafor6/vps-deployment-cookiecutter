@@ -38,8 +38,7 @@ jobs:
             use_celery=${{ matrix.use_celery }} \
             use_pgbouncer=y \
             environment=development \
-            domain=dev.example.com \
-            email_for_ssl=test@example.com
+            domain=dev.example.com
             
       - name: Validate generated docker-compose files
         env:
