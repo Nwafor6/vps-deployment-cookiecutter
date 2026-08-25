@@ -21,10 +21,9 @@
     "y",
     "n"
   ],
-  "dev_domain": "api-dev.example.com",
-  "prod_domain": "api.example.com",
+  "environment": "production",
+  "domain": "api.example.com",
   "email_for_ssl": "admin@example.com",
-  "dev_host_port": "8002",
-  "prod_host_port": "8001",
+  "host_port": "8000",
   "python_app_folder": "backend"
 }

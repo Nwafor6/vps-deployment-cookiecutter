@@ -1,13 +1,13 @@
 # Python VPS Deployment Cookiecutter
 
 
-[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) [![Cookiecutter](https://img.shields.io/badge/cookiecutter-template-D4AA00.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) [![Cookiecutter](https://img.shields.io/badge/cookiecutter-template-D4AA00.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Docker](https://img.shields.io/badge/Docker-2CA5E0?logo=docker&logoColor=white)](https://www.docker.com/) [![Caddy](https://img.shields.io/badge/Caddy-000000?logo=caddy&logoColor=13B5EA)](https://caddyserver.com/) [![SSL](https://img.shields.io/badge/Let's_Encrypt-Auto_SSL-green?logo=letsencrypt)](https://letsencrypt.org/) [![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
 *Check out an example project built with this: [YouTube Video Downloader](https://github.com/Nwafor6/youtube-video-downloader)*
 
 *Looking for the frontend equivalent? Check out the [Frontend VPS Deployment Cookiecutter](https://github.com/Nwafor6/vps-deployment-cookiecutter-js) for Next.js & Vite.*
 
-I kept rewriting the same Docker, Nginx, Let's Encrypt, and GitHub Actions setup for every VPS project I deployed. So, I templated it.
+I kept rewriting the same Docker, Caddy, Let's Encrypt, and GitHub Actions setup for every VPS project I deployed. So, I templated it.
 
 This is a highly optimized, production-ready CI/CD and Docker setup for deploying Python apps (Django or FastAPI) + Celery + PgBouncer + Redis on **VPS hosting** (AWS EC2, DigitalOcean Droplet, Hetzner, Hostinger, etc.). 
 
@@ -23,10 +23,10 @@ If you want the control and cost-savings of a VPS instead of using a managed Paa
 * **Framework Agnostic:** Supports both **Django** and **FastAPI** projects out of the box.
 * **Flexible Package Managers:** Choose between **uv**, **poetry**, or **pip** to match your existing workflow.
 * **Zero-Downtime Deployments:** Docker containers gracefully recreate on GitHub Actions pushes.
-* **Auto-SSL & Reverse Proxy:** Pre-configured Nginx templates with automatic Let's Encrypt SSL provisioning.
+* **Auto-SSL & Reverse Proxy:** Pre-configured Caddy gateway architecture with automatic Let's Encrypt SSL provisioning.
 * **Built for Scale:** Includes `PgBouncer` for database connection pooling, and `Redis` + `Celery` for background tasks.
-* **Multi-Tenant Ready:** Dynamically sets host ports so you can run multiple apps on the same VPS without port conflicts.
-* **Safe Bind Mounts:** Maps static and media files to `/var/www/` instead of opaque Docker volumes to prevent Nginx permission issues.
+* **Multi-Tenant Ready:** Uses `caddy-docker-proxy` so you can run multiple apps on the exact same VPS automatically without port conflicts.
+* **Single Unified Template:** Re-run the template to generate configurations for any environment (`development`, `staging`, `production`) dynamically.
 
 
 ## 🔒 Security Note (Secrets Handling)
@@ -98,31 +98,27 @@ existing-project/
 
 You will be prompted to provide several variables:
 
-* **`project_slug`**: The name of your project (e.g., `my-awesome-app`). This will be used for network names, container names, and Nginx configs.
+* **`project_slug`**: The name of your project (e.g., `my-awesome-app`). This will be used for network names and container names.
 * **`framework`**: Choose between `django` or `fastapi`.
 * **`package_manager`**: Choose between `uv`, `poetry`, or `pip`.
 * **`use_redis`**: Include Redis container? (`y` or `n`)
 * **`use_celery`**: Include Celery worker and beat containers? (`y` or `n`)
 * **`use_pgbouncer`**: Include PgBouncer connection pooler? (`y` or `n`)
-* **`python_app_folder`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
-* **`dev_domain`**: The domain for your development environment (e.g., `api-dev.example.com`).
-* **`prod_domain`**: The domain for your production environment (e.g., `api.example.com`).
+* **`environment`**: The environment you are targeting (e.g., `development`, `staging`, `production`).
+* **`domain`**: The domain for this specific environment (e.g., `api-dev.example.com` or `api.example.com`).
 * **`email_for_ssl`**: The email address Let's Encrypt will use for SSL certificate expiration notices.
-* **`dev_host_port`**: The port exposed to the VPS host for the DEV environment (e.g., `8002`).
-* **`prod_host_port`**: The port exposed to the VPS host for the PROD environment (e.g., `8001`).
+* **`host_port`**: The internal port exposed to the VPS host for this environment (e.g., `8000`).
+* **`python_app_folder`**: The exact name of the folder containing your `settings.py` and `asgi.py` (e.g., `backend`, `core`, or `my_app`). Leave as default if using FastAPI.
 
 ### What gets generated?
 ```
 your_project/
 ├── .github/
 │   └── workflows/
-│       ├── deploy-dev.yml
-│       └── deploy-prod.yml
+│       └── deploy-<environment>.yml
 ├── Dockerfile
-├── docker-compose.<slug>.dev.yml
-├── docker-compose.<slug>.prod.yml
-├── nginx-<slug>-dev.conf
-└── nginx-<slug>-prod.conf
+├── docker-compose.<environment>.yml
+└── Caddyfile.<environment>
 ```
 
 ## ⚙️ GitHub Secrets Required
@@ -130,8 +126,8 @@ your_project/
 To make the CI/CD pipeline work automatically, add the following Secrets to your GitHub repository:
 
 * **DockerHub**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
-* **VPS Access**: `EC2_HOST`, `EC2_HOST_PROD`, `EC2_USERNAME` (e.g., `ubuntu` or `root`), `SSH_PRIVATE_KEY` *(Note: The variable names contain 'EC2', but they work perfectly for any cloud provider)*
-* **App Secrets**: `SECRET_KEY`, `DATABASE_URL` (Dev), `DATABASE_PROD_URL` (Prod)
+* **VPS Access**: `VPS_HOST`, `VPS_USERNAME` (e.g., `ubuntu` or `root`), `SSH_PRIVATE_KEY`
+* **App Secrets**: `SECRET_KEY`, `DATABASE_URL`
 * **Optional Integrations**: Any other environment variables your app requires (e.g., AWS S3 keys, AI provider keys). Edit the `.yml` files to pass these through to the `.env` generation step.
 
 ## 📖 Deployment Flow
@@ -140,6 +136,7 @@ To make the CI/CD pipeline work automatically, add the following Secrets to your
 2. GitHub Actions will build the Docker image using `uv` and push it to DockerHub.
 3. The Action SSHs into your VPS instance.
 4. It dynamically generates a `.env` file on the server.
-5. It pulls the latest image and runs `docker compose up -d` (zero-downtime recreation).
-6. It runs Django migrations and collects static files.
-7. *Optional:* If you set `SETUP_SSL: true` in the GitHub workflow, it will automatically configure Nginx and generate Let's Encrypt certificates.
+5. It bootstraps a global `caddy-docker-proxy` gateway if one doesn't exist.
+6. It pulls the latest image and runs `docker compose up -d` (zero-downtime recreation).
+7. If Django, it runs Django migrations and collects static files.
+8. The global Caddy gateway detects the new containers, automatically generates Let's Encrypt SSL certificates, and routes the traffic.
