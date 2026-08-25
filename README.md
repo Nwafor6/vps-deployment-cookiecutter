@@ -12,37 +12,8 @@ If you want the control and cost-savings of a VPS instead of using a managed Paa
 ## 🚀 Architecture: Multi-Project Hosting on a Single VPS
 
 This kit generates a powerful architecture that lets you host multiple, independent Python applications on one server. By leveraging a central Caddy gateway, the setup minimizes resource usage and automates SSL, saving you time and money compared to traditional PaaS solutions.
-```mermaid
-graph TD
-    subgraph "Single VPS"
-        subgraph "Global Gateway Network"
-            Caddy["**Caddy Reverse Proxy**"]
-            style Caddy fill:#bde4ff,stroke:#000,stroke-width:2px
-        end
 
-        subgraph "Project A Network"
-            direction LR
-            A_Web["**api.startup.com**"] --> A_Worker["**worker**"]
-            A_Web --> A_Beat["**beat**"]
-        end
-
-        subgraph "Project B Network"
-             direction LR
-            B_Web["**api.personal.com**"]
-        end
-        
-        subgraph "Project C Network"
-             direction LR
-            C_Web["**api.staging.com**"]
-        end
-
-        Internet["**Internet Traffic**"] -->|Ports 80 & 443| Caddy
-        
-        Caddy <-->|Discovers Services via Docker Labels| A_Web
-        Caddy <-->|Discovers Services via Docker Labels| B_Web
-        Caddy <-->|Discovers Services via Docker Labels| C_Web
-    end
-```
+<img width="1003" height="356" alt="Screenshot from 2026-08-25 19-28-15" src="https://github.com/user-attachments/assets/7484f47c-1996-4893-8fbf-0908360f7a61" />
 
 <!-- PLACEHOLDER FOR SCREENSHOT/GIF -->
 <img width="1361" height="617" alt="Screenshot from 2026-08-22 10-07-22" src="https://github.com/user-attachments/assets/eabc4050-1385-4739-b321-d92e2a719430" />
