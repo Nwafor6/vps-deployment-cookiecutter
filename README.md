@@ -96,6 +96,24 @@ existing-project/
     └── main.py
 ```
 
+### Non-Interactive Mode / CI Usage
+
+For automated setups, you can run `cookiecutter` non-interactively by passing all the options on the command line. This is useful for scripts or CI/CD pipelines.
+
+Here's an example command:
+```bash
+cookiecutter https://github.com/Nwafor6/vps-deployment-cookiecutter.git --no-input \
+    project_slug="my-cool-project" \
+    framework="fastapi" \
+    package_manager="uv" \
+    use_redis="y" \
+    use_celery="y" \
+    use_pgbouncer="y" \
+    environment="production" \
+    domain="api.my-cool-project.com" \
+    python_app_folder="backend"
+```
+
 You will be prompted to provide several variables:
 
 * **`project_slug`**: The name of your project (e.g., `my-awesome-app`). This will be used for network names and container names.
