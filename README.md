@@ -5,10 +5,6 @@
 
 *Check out an example project built with this: [YouTube Video Downloader](https://github.com/Nwafor6/youtube-video-downloader)*
 
-*Looking for the frontend equivalent? Check out the [Frontend VPS Deployment Cookiecutter](https://github.com/Nwafor6/vps-deployment-cookiecutter-js) for Next.js & Vite.*
-
-I kept rewriting the same Docker, Caddy, Let's Encrypt, and GitHub Actions setup for every VPS project I deployed. So, I templated it.
-
 This is a highly optimized, production-ready CI/CD and Docker setup for deploying Python apps (Django or FastAPI) + Celery + PgBouncer + Redis on **VPS hosting** (AWS EC2, DigitalOcean Droplet, Hetzner, Hostinger, etc.). 
 
 If you want the control and cost-savings of a VPS instead of using a managed PaaS (like Heroku, Render, or Railway), this kit generates the entire production architecture in seconds.
