@@ -9,6 +9,41 @@ This is a highly optimized, production-ready CI/CD and Docker setup for deployin
 
 If you want the control and cost-savings of a VPS instead of using a managed PaaS (like Heroku, Render, or Railway), this kit generates the entire production architecture in seconds.
 
+## 🚀 Architecture: Multi-Project Hosting on a Single VPS
+
+This kit generates a powerful architecture that lets you host multiple, independent Python applications on one server. By leveraging a central Caddy gateway, the setup minimizes resource usage and automates SSL, saving you time and money compared to traditional PaaS solutions.
+```mermaid
+graph TD
+    subgraph "Single VPS"
+        subgraph "Global Gateway Network"
+            Caddy["**Caddy Reverse Proxy**"]
+            style Caddy fill:#bde4ff,stroke:#000,stroke-width:2px
+        end
+
+        subgraph "Project A Network"
+            direction LR
+            A_Web["**api.startup.com**"] --> A_Worker["**worker**"]
+            A_Web --> A_Beat["**beat**"]
+        end
+
+        subgraph "Project B Network"
+             direction LR
+            B_Web["**api.personal.com**"]
+        end
+        
+        subgraph "Project C Network"
+             direction LR
+            C_Web["**api.staging.com**"]
+        end
+
+        Internet["**Internet Traffic**"] -->|Ports 80 & 443| Caddy
+        
+        Caddy <-->|Discovers Services via Docker Labels| A_Web
+        Caddy <-->|Discovers Services via Docker Labels| B_Web
+        Caddy <-->|Discovers Services via Docker Labels| C_Web
+    end
+```
+
 <!-- PLACEHOLDER FOR SCREENSHOT/GIF -->
 <img width="1361" height="617" alt="Screenshot from 2026-08-22 10-07-22" src="https://github.com/user-attachments/assets/eabc4050-1385-4739-b321-d92e2a719430" />
 <img width="1361" height="617" alt="Screenshot from 2026-08-22 10-07-32" src="https://github.com/user-attachments/assets/f03ead72-531e-416b-a07d-13659a80abc8" />
@@ -18,10 +53,10 @@ If you want the control and cost-savings of a VPS instead of using a managed Paa
 
 * **Framework Agnostic:** Supports both **Django** and **FastAPI** projects out of the box.
 * **Flexible Package Managers:** Choose between **uv**, **poetry**, or **pip** to match your existing workflow.
-* **Zero-Downtime Deployments:** Docker containers gracefully recreate on GitHub Actions pushes.
+* **Graceful Deployments:** Docker containers gracefully recreate on GitHub Actions pushes, resulting in near-zero downtime.
 * **Auto-SSL & Reverse Proxy:** Pre-configured Caddy gateway architecture with automatic Let's Encrypt SSL provisioning.
 * **Built for Scale:** Includes `PgBouncer` for database connection pooling, and `Redis` + `Celery` for background tasks.
-* **Multi-Tenant Ready:** Uses `caddy-docker-proxy` so you can run multiple apps on the exact same VPS automatically without port conflicts.
+* **Multi-Project Ready:** Uses `caddy-docker-proxy` so you can run multiple apps on the exact same VPS automatically without port conflicts.
 * **Single Unified Template:** Re-run the template to generate configurations for any environment (`development`, `staging`, `production`) dynamically.
 
 
