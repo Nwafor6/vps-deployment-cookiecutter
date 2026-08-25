@@ -24,6 +24,5 @@
   "environment": "production",
   "domain": "api.example.com",
   "email_for_ssl": "admin@example.com",
-  "host_port": "8000",
   "python_app_folder": "backend"
 }

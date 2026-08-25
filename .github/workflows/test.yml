@@ -39,7 +39,6 @@ jobs:
             use_pgbouncer=y \
             environment=development \
             domain=dev.example.com \
-            host_port=8000 \
             email_for_ssl=test@example.com
             
       - name: Validate generated docker-compose files
