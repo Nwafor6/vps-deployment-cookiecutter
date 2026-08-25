@@ -45,7 +45,7 @@ jobs:
           username: {% raw %}${{ secrets.VPS_USERNAME }}{% endraw %}
           key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
           script: |
-            rm -rf docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml Caddyfile.{{cookiecutter.environment}}.{{cookiecutter.environment}}
+            rm -rf docker-compose.{{cookiecutter.environment}}.yml Caddyfile.{{cookiecutter.environment}}
             echo "Cleanup done"
 
       - name: Copy deployment files to server
@@ -54,7 +54,7 @@ jobs:
           host: {% raw %}${{ secrets.VPS_HOST }}{% endraw %}
           username: {% raw %}${{ secrets.VPS_USERNAME }}{% endraw %}
           key: {% raw %}${{ secrets.SSH_PRIVATE_KEY }}{% endraw %}
-          source: "docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml,Caddyfile.{{cookiecutter.environment}}.{{cookiecutter.environment}}"
+          source: "docker-compose.{{cookiecutter.environment}}.yml,Caddyfile.{{cookiecutter.environment}}"
           target: "./"
 
       - name: Update Environment Variables on Server
@@ -175,27 +175,27 @@ jobs:
 
             # Pull the latest Docker image(s)
             # docker compose will read .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} for ${DOCKER_IMAGE} substitution
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml pull || true
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml pull || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml pull || true
 
             # Start containers (will gracefully recreate only changed containers)
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml up -d --no-build
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml up -d --no-build || docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml up -d --no-build
 
             # Wait a moment
             sleep 5
 
             {% if cookiecutter.framework == 'django' %}
             # Run migrations
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml exec -T web python manage.py migrate
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml exec -T web python manage.py migrate
 
             # Collect static files
-            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml exec -T web python manage.py collectstatic --noinput
+            sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml exec -T web python manage.py collectstatic --noinput
             {% elif cookiecutter.framework == 'fastapi' %}
             # Optional: Run alembic migrations if they use it (uncomment if using Alembic)
-            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml exec -T web alembic upgrade head || true
+            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml exec -T web alembic upgrade head || true
             {% endif %}
 
             # Add any custom deployment commands here (e.g. cache clearing, custom scripts)
-            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}.yml exec -T web python manage.py your_custom_command
+            # sudo docker compose -p {{cookiecutter.project_slug | replace('-', '_')}}_{{cookiecutter.environment}} --env-file .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} -f docker-compose.{{cookiecutter.environment}}.yml exec -T web python manage.py your_custom_command
 
             # Clean up unused images and logs
             sudo docker image prune -f
