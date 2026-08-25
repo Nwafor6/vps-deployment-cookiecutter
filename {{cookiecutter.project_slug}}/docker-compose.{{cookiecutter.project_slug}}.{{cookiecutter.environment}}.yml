@@ -6,7 +6,7 @@ services:
       caddy: {{cookiecutter.domain}}
       caddy.reverse_proxy: "{% raw %}{{upstreams 80}}{% endraw %}"
     volumes:
-      - ./Caddyfile.{{cookiecutter.environment}}:/etc/caddy/Caddyfile
+      - ./Caddyfile.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}:/etc/caddy/Caddyfile
       - /var/www/{{cookiecutter.project_slug}}-{{cookiecutter.environment}}/static:/app/static
       - /var/www/{{cookiecutter.project_slug}}-{{cookiecutter.environment}}/media:/app/media
     networks:
