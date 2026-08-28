@@ -27,9 +27,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:dev,{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:{% raw %}${{ github.sha }}{% endraw %}
-          cache-from: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:buildcache
-          cache-to: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:buildcache,mode=max
+          tags: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug | lower }}:dev,{% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug | lower }}:{% raw %}${{ github.sha }}{% endraw %}
+          cache-from: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug | lower }}:buildcache
+          cache-to: type=registry,ref={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug | lower }}:buildcache,mode=max
 
   update-environment:
     runs-on: ubuntu-latest
@@ -66,7 +66,7 @@ jobs:
           script: |
             echo "Creating .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}} file on server"
             cat <<EOF > .env.{{cookiecutter.project_slug}}.{{cookiecutter.environment}}
-            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug}}:dev
+            DOCKER_IMAGE={% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}/{{cookiecutter.project_slug | lower }}:dev
             
             # ==========================================
             # ⬇️ ADD YOUR CUSTOM ENVIRONMENT VARIABLES ⬇️
