@@ -27,7 +27,7 @@ RUN pip install -r requirements.txt
 {% elif cookiecutter.package_manager == 'poetry' %}
 RUN pip install poetry
 COPY pyproject.toml poetry.lock* ./
-RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false && poetry install --no-root --no-interaction --no-ansi
 
 {% elif cookiecutter.package_manager == 'uv' %}
 # Install uv (fast Python package installer)
